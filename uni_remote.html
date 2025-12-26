@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Universal Omni-Remote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #0f172a; color: white; font-family: -apple-system, sans-serif; touch-action: manipulation; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        .btn-press { transition: transform 0.1s, background 0.2s; position: relative; overflow: hidden; }
+        .btn-press:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
+        .scan-active { animation: pulse-red 1.5s infinite; border-color: #ef4444; color: #ef4444; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 pb-24">
+
+    <div class="w-full max-w-md flex justify-between items-center mb-6">
+        <div class="flex items-center gap-3">
+            <div id="statusDot" class="w-3 h-3 rounded-full bg-red-500"></div>
+            <div>
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">System</div>
+                <div id="statusText" class="text-xs font-bold text-slate-300">Disconnected</div>
+            </div>
+        </div>
+        <button onclick="startAutoScan()" id="scanBtn" class="glass px-4 py-2 rounded-full text-xs font-bold text-yellow-500 border border-yellow-500/30">
+            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>AUTO SCAN
+        </button>
+    </div>
+
+    <div class="w-full max-w-md space-y-4">
+
+        <div class="glass rounded-2xl p-4 space-y-3">
+            <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                <span class="text-xs font-bold text-slate-400">ROOM</span>
+                <select id="roomSelect" onchange="changeRoom(this.value)" class="bg-transparent text-right font-bold text-sm text-blue-400 outline-none">
+                    <option value="living">Living Room</option>
+                    <option value="bed">Bedroom</option>
+                    <option value="office">Office</option>
+                </select>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-400">BRAND</span>
+                <select id="brandSelect" onchange="setBrand(this.value)" class="bg-slate-800 rounded-lg px-3 py-1 text-xs font-bold outline-none border border-slate-700 max-w-[150px]">
+                    <option value="samsung">Samsung</option>
+                    <option value="lg">LG</option>
+                    <option value="sony">Sony</option>
+                    <option value="panasonic">Panasonic</option>
+                    <option value="philips">Philips</option>
+                    <option value="sharp">Sharp</option>
+                    <option value="toshiba">Toshiba</option>
+                    <option value="tcl">TCL / Roku</option>
+                    <option value="vizio">Vizio</option>
+                    <option value="hisense">Hisense</option>
+                    <option value="jvc">JVC</option>
+                    <option value="sanyo">Sanyo</option>
+                    <option value="nec">Generic NEC</option>
+                    <option value="rc5">Old CRT (RC5)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+            <button onclick="send('power')" class="glass btn-press py-6 rounded-2xl text-red-500 text-2xl"><i class="fa-solid fa-power-off"></i></button>
+            <button onclick="send('source')" class="glass btn-press py-6 rounded-2xl text-slate-300 text-xl"><i class="fa-solid fa-right-to-bracket"></i></button>
+            <button onclick="send('mute')" class="glass btn-press py-6 rounded-2xl text-slate-300 text-xl"><i class="fa-solid fa-volume-xmark"></i></button>
+        </div>
+
+        <div class="glass rounded-full p-6 w-64 h-64 mx-auto grid grid-cols-3 grid-rows-3 gap-1 items-center justify-items-center">
+            <button onclick="send('menu')" class="text-[10px] font-bold text-slate-500">MENU</button>
+            <button onclick="send('up')" class="w-14 h-14 glass rounded-xl btn-press flex items-center justify-center"><i class="fa-solid fa-chevron-up"></i></button>
+            <button onclick="send('info')" class="text-[10px] font-bold text-slate-500">INFO</button>
+            
+            <button onclick="send('left')" class="w-14 h-14 glass rounded-xl btn-press flex items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="send('ok')" class="w-16 h-16 bg-blue-600 rounded-full btn-press font-bold shadow-lg shadow-blue-900/50 text-sm">OK</button>
+            <button onclick="send('right')" class="w-14 h-14 glass rounded-xl btn-press flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
+            
+            <button onclick="send('exit')" class="text-[10px] font-bold text-slate-500">EXIT</button>
+            <button onclick="send('down')" class="w-14 h-14 glass rounded-xl btn-press flex items-center justify-center"><i class="fa-solid fa-chevron-down"></i></button>
+            <button onclick="send('back')" class="text-[10px] font-bold text-slate-500">BACK</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div class="glass rounded-3xl p-2 flex flex-col items-center justify-between h-40">
+                <button onclick="send('volup')" class="w-full flex-1 btn-press rounded-xl text-slate-300"><i class="fa-solid fa-plus"></i></button>
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">VOL</span>
+                <button onclick="send('voldown')" class="w-full flex-1 btn-press rounded-xl text-slate-300"><i class="fa-solid fa-minus"></i></button>
+            </div>
+            <div class="glass rounded-3xl p-2 flex flex-col items-center justify-between h-40">
+                <button onclick="send('chup')" class="w-full flex-1 btn-press rounded-xl text-slate-300"><i class="fa-solid fa-chevron-up"></i></button>
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">CH</span>
+                <button onclick="send('chdown')" class="w-full flex-1 btn-press rounded-xl text-slate-300"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+        </div>
+
+        <button onclick="toggleNumpad()" class="w-full glass py-3 rounded-xl text-xs font-bold text-slate-400">
+            <i class="fa-solid fa-keyboard mr-2"></i> NUMBER PAD
+        </button>
+
+        <div id="numpad" class="hidden grid grid-cols-3 gap-2 pb-8">
+            <script>
+                for(let i=1; i<=9; i++) document.write(`<button onclick="send('${i}')" class="glass py-4 rounded-lg font-bold text-lg btn-press">${i}</button>`);
+            </script>
+            <button class="glass py-4 rounded-lg text-xs font-bold">- / --</button>
+            <button onclick="send('0')" class="glass py-4 rounded-lg font-bold text-lg btn-press">0</button>
+            <button onclick="send('enter')" class="glass py-4 rounded-lg text-xs font-bold">ENTER</button>
+        </div>
+        
+        <p id="msg" class="text-center text-xs text-slate-500 h-4"></p>
+    </div>
+
+    <script>
+        let isScanning = false;
+
+        function checkConnect() {
+            fetch('/ping').then(r => {
+                if(r.ok) {
+                    document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
+                    document.getElementById('statusText').innerText = "Online";
+                    document.getElementById('statusText').className = "text-xs font-bold text-green-400";
+                    changeRoom(document.getElementById('roomSelect').value);
+                }
+            });
+        }
+
+        function changeRoom(room) {
+            fetch('/setRoom', { method: 'POST', body: 'room=' + room })
+            .then(r => r.json()).then(d => {
+                if(d.brand) document.getElementById('brandSelect').value = d.brand;
+            });
+        }
+
+        function setBrand(brand) {
+            fetch('/saveBrand', { method: 'POST', body: 'brand=' + brand });
+        }
+
+        function send(key) {
+            if(isScanning) { stopScan(true); return; } // Stop scan if user presses a button
+            if(navigator.vibrate) navigator.vibrate(30);
+            fetch('/cmd', { method: 'POST', body: 'key=' + key });
+        }
+
+        function startAutoScan() {
+            const btn = document.getElementById('scanBtn');
+            const msg = document.getElementById('msg');
+            
+            if (!isScanning) {
+                isScanning = true;
+                btn.innerHTML = '<i class="fa-solid fa-stop mr-2"></i>STOP';
+                btn.className = "glass px-4 py-2 rounded-full text-xs font-bold text-red-500 border border-red-500 scan-active";
+                msg.innerText = "Trying codes... Press STOP when TV reacts.";
+                
+                // Start the scan loop on ESP32
+                fetch('/scan?action=start');
+            } else {
+                stopScan(false);
+            }
+        }
+
+        function stopScan(success) {
+            isScanning = false;
+            const btn = document.getElementById('scanBtn');
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>AUTO SCAN';
+            btn.className = "glass px-4 py-2 rounded-full text-xs font-bold text-yellow-500 border border-yellow-500/30";
+            document.getElementById('msg').innerText = success ? "Code Saved!" : "Scan Stopped.";
+            fetch('/scan?action=stop');
+        }
+
+        function toggleNumpad() {
+            document.getElementById('numpad').classList.toggle('hidden');
+        }
+
+        window.onload = checkConnect;
+    </script>
+</body>
+</html>
